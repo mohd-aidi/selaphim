@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/conversation.dart';
+import '../providers/ai_personality_provider.dart';
 import '../providers/conversation_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/speech_service.dart';
@@ -92,6 +93,7 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
 
     final settings = context.read<SettingsProvider>();
     final conv = context.read<ConversationProvider>();
+    final personality = context.read<AIPersonalityProvider>();
 
     final userId = settings.user?.id;
     if (userId == null) return;
@@ -107,9 +109,12 @@ class _VoiceAssistantScreenState extends State<VoiceAssistantScreen>
       userMessage: text,
       provider: settings.aiProvider,
       model: settings.aiModel,
+      aiName: settings.aiName,
+      skillLevel: personality.skillLevel,
     );
 
     if (reply != null && mounted) {
+      personality.rewardChatInteraction();
       setState(() => _isSpeaking = true);
       TtsService.instance.setHandlers(
         onComplete: () {

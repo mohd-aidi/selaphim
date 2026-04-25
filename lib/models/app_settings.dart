@@ -8,6 +8,7 @@ class AppSettings {
   final String userId;
   final AIProvider aiProvider;
   final String aiModel;
+  final String aiName;
   final String? ttsVoice;
   final double ttsSpeed;
   final double ttsPitch;
@@ -15,12 +16,15 @@ class AppSettings {
   final ThemeMode themeMode;
   final int liveVisionInterval;
   final bool notificationsEnabled;
+  final bool selfLearningEnabled;
+  final int selfLearningIntervalMinutes;
 
   const AppSettings({
     required this.id,
     required this.userId,
     required this.aiProvider,
     required this.aiModel,
+    this.aiName = 'Selaphim',
     this.ttsVoice,
     required this.ttsSpeed,
     required this.ttsPitch,
@@ -28,6 +32,8 @@ class AppSettings {
     required this.themeMode,
     required this.liveVisionInterval,
     required this.notificationsEnabled,
+    this.selfLearningEnabled = false,
+    this.selfLearningIntervalMinutes = 60,
   });
 
   factory AppSettings.defaults({required String userId}) {
@@ -36,12 +42,15 @@ class AppSettings {
       userId: userId,
       aiProvider: AIProvider.openai,
       aiModel: AIProvider.openai.defaultModel,
+      aiName: 'Selaphim',
       ttsSpeed: 1.0,
       ttsPitch: 1.0,
       languageCode: 'en-US',
       themeMode: ThemeMode.system,
       liveVisionInterval: 10,
       notificationsEnabled: true,
+      selfLearningEnabled: false,
+      selfLearningIntervalMinutes: 60,
     );
   }
 
@@ -53,6 +62,7 @@ class AppSettings {
       userId: map['user_id'] as String,
       aiProvider: provider,
       aiModel: map['ai_model'] as String,
+      aiName: (map['ai_name'] as String?) ?? 'Selaphim',
       ttsVoice: map['tts_voice'] as String?,
       ttsSpeed: (map['tts_speed'] as num).toDouble(),
       ttsPitch: (map['tts_pitch'] as num).toDouble(),
@@ -60,6 +70,9 @@ class AppSettings {
       themeMode: theme,
       liveVisionInterval: map['live_vision_interval'] as int,
       notificationsEnabled: (map['notifications_enabled'] as int) == 1,
+      selfLearningEnabled: (map['self_learning_enabled'] as int? ?? 0) == 1,
+      selfLearningIntervalMinutes:
+          map['self_learning_interval_minutes'] as int? ?? 60,
     );
   }
 
@@ -69,6 +82,7 @@ class AppSettings {
       'user_id': userId,
       'ai_provider': aiProvider.value,
       'ai_model': aiModel,
+      'ai_name': aiName,
       'tts_voice': ttsVoice,
       'tts_speed': ttsSpeed,
       'tts_pitch': ttsPitch,
@@ -76,12 +90,15 @@ class AppSettings {
       'theme': _themeToString(themeMode),
       'live_vision_interval': liveVisionInterval,
       'notifications_enabled': notificationsEnabled ? 1 : 0,
+      'self_learning_enabled': selfLearningEnabled ? 1 : 0,
+      'self_learning_interval_minutes': selfLearningIntervalMinutes,
     };
   }
 
   AppSettings copyWith({
     AIProvider? aiProvider,
     String? aiModel,
+    String? aiName,
     String? ttsVoice,
     double? ttsSpeed,
     double? ttsPitch,
@@ -89,12 +106,15 @@ class AppSettings {
     ThemeMode? themeMode,
     int? liveVisionInterval,
     bool? notificationsEnabled,
+    bool? selfLearningEnabled,
+    int? selfLearningIntervalMinutes,
   }) {
     return AppSettings(
       id: id,
       userId: userId,
       aiProvider: aiProvider ?? this.aiProvider,
       aiModel: aiModel ?? this.aiModel,
+      aiName: aiName ?? this.aiName,
       ttsVoice: ttsVoice ?? this.ttsVoice,
       ttsSpeed: ttsSpeed ?? this.ttsSpeed,
       ttsPitch: ttsPitch ?? this.ttsPitch,
@@ -102,6 +122,9 @@ class AppSettings {
       themeMode: themeMode ?? this.themeMode,
       liveVisionInterval: liveVisionInterval ?? this.liveVisionInterval,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      selfLearningEnabled: selfLearningEnabled ?? this.selfLearningEnabled,
+      selfLearningIntervalMinutes:
+          selfLearningIntervalMinutes ?? this.selfLearningIntervalMinutes,
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/ai_provider.dart';
+import '../providers/ai_personality_provider.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     with AutomaticKeepAliveClientMixin {
   final Map<String, TextEditingController> _apiKeyControllers = {};
   final Map<String, bool> _obscureKey = {};
+  final TextEditingController _aiNameController = TextEditingController();
 
   @override
   bool get wantKeepAlive => true;
@@ -37,7 +39,10 @@ class _SettingsScreenState extends State<SettingsScreen>
         _apiKeyControllers[p.value]?.text = key;
       }
     }
-    if (mounted) setState(() {});
+    if (mounted) {
+      _aiNameController.text = settings.aiName;
+      setState(() {});
+    }
   }
 
   @override
@@ -45,6 +50,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     for (final c in _apiKeyControllers.values) {
       c.dispose();
     }
+    _aiNameController.dispose();
     super.dispose();
   }
 
@@ -52,6 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final settings = context.watch<SettingsProvider>();
+    final personality = context.watch<AIPersonalityProvider>();
     final s = settings.settings;
     if (s == null) return const Center(child: CircularProgressIndicator());
 
@@ -257,7 +264,92 @@ class _SettingsScreenState extends State<SettingsScreen>
                 settings.updateSettings(s.copyWith(notificationsEnabled: v)),
           ),
 
-          const SizedBox(height: 32),
+          const Divider(),
+
+          // ── Personality ───────────────────────────────────────────────────
+          _SectionHeader(label: 'AI Personality', icon: Icons.face_rounded),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _aiNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'AI Name',
+                      prefixIcon: Icon(Icons.smart_toy_rounded),
+                      hintText: 'e.g. Selaphim',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  icon: const Icon(Icons.save_rounded),
+                  tooltip: 'Save AI name',
+                  onPressed: () async {
+                    await settings.setAIName(_aiNameController.text);
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'AI name updated to "${settings.aiName}"')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.military_tech_rounded),
+            title: Text(
+                'Level ${personality.skillLevel} — ${personality.levelTitle}'),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                    value: personality.levelProgress),
+                const SizedBox(height: 4),
+                Text('${personality.xp} XP  •  '
+                    '${(personality.levelProgress * 100).round()}% to next level'),
+              ],
+            ),
+            isThreeLine: true,
+          ),
+
+          const Divider(),
+
+          // ── Self Learning ─────────────────────────────────────────────────
+          _SectionHeader(
+              label: 'Self Learning', icon: Icons.auto_stories_rounded),
+          SwitchListTile(
+            secondary: const Icon(Icons.camera_enhance_rounded),
+            title: const Text('Enable Auto-Capture'),
+            subtitle: const Text(
+                'Periodically takes a photo for self-learning'),
+            value: s.selfLearningEnabled,
+            onChanged: (v) async {
+              await settings.setSelfLearning(enabled: v);
+            },
+          ),
+          if (s.selfLearningEnabled)
+            ListTile(
+              leading: const Icon(Icons.timer_rounded),
+              title: const Text('Capture Interval'),
+              subtitle: Slider(
+                value: s.selfLearningIntervalMinutes.toDouble(),
+                min: 15,
+                max: 240,
+                divisions: 15,
+                label: '${s.selfLearningIntervalMinutes} min',
+                onChanged: (v) => settings.updateSettings(
+                    s.copyWith(selfLearningIntervalMinutes: v.round())),
+              ),
+              trailing: Text('${s.selfLearningIntervalMinutes} min'),
+            ),
+
+          const Divider(),
 
           // App info
           Padding(

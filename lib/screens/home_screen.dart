@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/activity_provider.dart';
+import '../providers/ai_personality_provider.dart';
 import '../providers/conversation_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/activity_card.dart';
 import '../widgets/stat_tile.dart';
+import 'schedule_screen.dart';
+import 'self_learning_screen.dart';
+import 'tools_screen.dart';
 import 'vision_screen.dart';
 import 'voice_assistant_screen.dart';
 import 'history_screen.dart';
@@ -31,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = context.read<SettingsProvider>();
     final activity = context.read<ActivityProvider>();
     final conv = context.read<ConversationProvider>();
+    final personality = context.read<AIPersonalityProvider>();
 
     // Wait until settings are loaded
     if (settings.loading) return;
@@ -39,7 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (userId == null) return;
 
     conv.setUserId(userId);
-    await activity.loadForUser(userId);
+    await Future.wait([
+      activity.loadForUser(userId),
+      personality.loadForUser(userId),
+    ]);
   }
 
   @override
@@ -52,6 +60,9 @@ class _HomeScreenState extends State<HomeScreen> {
           VisionScreen(),
           VoiceAssistantScreen(),
           HistoryScreen(),
+          ScheduleScreen(),
+          SelfLearningScreen(),
+          ToolsScreen(),
           SettingsScreen(),
         ],
       ),
@@ -80,6 +91,21 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'History',
           ),
           NavigationDestination(
+            icon: Icon(Icons.alarm_outlined),
+            selectedIcon: Icon(Icons.alarm_rounded),
+            label: 'Schedule',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_stories_outlined),
+            selectedIcon: Icon(Icons.auto_stories_rounded),
+            label: 'Learning',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.extension_outlined),
+            selectedIcon: Icon(Icons.extension_rounded),
+            label: 'Tools',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings_rounded),
             label: 'Settings',
@@ -97,20 +123,31 @@ class _DashboardTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final activity = context.watch<ActivityProvider>();
+    final personality = context.watch<AIPersonalityProvider>();
 
     if (settings.loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     final userName = settings.user?.name ?? 'User';
+    final aiName = settings.aiName;
     final colorScheme = Theme.of(context).colorScheme;
 
     return CustomScrollView(
       slivers: [
         SliverAppBar.large(
-          title: const Text('Selaphim'),
+          title: Text(aiName),
           floating: true,
           actions: [
+            // Level badge
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Chip(
+                avatar: const Icon(Icons.military_tech_rounded, size: 16),
+                label: Text('Lv ${personality.skillLevel}'),
+                backgroundColor: colorScheme.primaryContainer,
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.add_comment_rounded),
               tooltip: 'Add note',
@@ -156,7 +193,7 @@ class _DashboardTab extends StatelessWidget {
                               ),
                         ),
                         Text(
-                          'How can I assist you today?',
+                          'How can $aiName assist you today?',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
                                     color: colorScheme.onPrimaryContainer,

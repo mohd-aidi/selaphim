@@ -42,6 +42,8 @@ class ConversationProvider extends ChangeNotifier {
     required AIProvider provider,
     required String model,
     String? systemPrompt,
+    String aiName = 'Selaphim',
+    int skillLevel = 1,
   }) async {
     if (_currentUserId == null) return null;
 
@@ -86,8 +88,7 @@ class ConversationProvider extends ChangeNotifier {
         history: _current!.messages,
         userMessage: userMessage,
         systemPrompt: systemPrompt ??
-            'You are Selaphim, a helpful AI assistant for daily life. '
-                'Be concise, friendly and supportive.',
+            buildSystemPrompt(aiName: aiName, skillLevel: skillLevel),
       );
 
       final assistantMsg = Message.create(

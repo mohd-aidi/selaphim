@@ -19,6 +19,7 @@ class SettingsProvider extends ChangeNotifier {
   ThemeMode get themeMode => _settings?.themeMode ?? ThemeMode.system;
   AIProvider get aiProvider => _settings?.aiProvider ?? AIProvider.openai;
   String get aiModel => _settings?.aiModel ?? AIProvider.openai.defaultModel;
+  String get aiName => _settings?.aiName ?? 'Selaphim';
 
   /// Load or create a default user + settings on first run.
   Future<void> load() async {
@@ -79,9 +80,27 @@ class SettingsProvider extends ChangeNotifier {
     await updateSettings(_settings!.copyWith(aiModel: model));
   }
 
+  Future<void> setAIName(String name) async {
+    if (_settings == null) return;
+    final trimmed = name.trim().isEmpty ? 'Selaphim' : name.trim();
+    await updateSettings(_settings!.copyWith(aiName: trimmed));
+  }
+
   Future<void> setTheme(ThemeMode mode) async {
     if (_settings == null) return;
     await updateSettings(_settings!.copyWith(themeMode: mode));
+  }
+
+  Future<void> setSelfLearning({
+    required bool enabled,
+    int? intervalMinutes,
+  }) async {
+    if (_settings == null) return;
+    await updateSettings(_settings!.copyWith(
+      selfLearningEnabled: enabled,
+      selfLearningIntervalMinutes:
+          intervalMinutes ?? _settings!.selfLearningIntervalMinutes,
+    ));
   }
 
   Future<void> saveApiKey(String providerValue, String key) async {

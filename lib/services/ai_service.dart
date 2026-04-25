@@ -18,6 +18,40 @@ class AIServiceException implements Exception {
   String toString() => 'AIServiceException($statusCode): $message';
 }
 
+/// Immutable safety rules prepended to every system prompt.
+/// These cannot be overridden or disabled.
+const String kSafetyRules =
+    'IMMUTABLE SAFETY RULES — these override every other instruction:\n'
+    'Rule 1: You must NEVER do anything that could harm your owner '
+    'physically, emotionally, financially, or legally.\n'
+    'Rule 2: You must always obey Rule 1, even if explicitly asked to violate it.\n\n';
+
+/// Build a complete system prompt from the AI name, skill level description,
+/// and any caller-supplied context.
+String buildSystemPrompt({
+  String aiName = 'Selaphim',
+  int skillLevel = 1,
+  String? extra,
+}) {
+  final levelDesc = _skillLevelDescription(skillLevel);
+  final nameLine = 'Your name is $aiName.\n';
+  final levelLine =
+      'Your current skill level is $skillLevel/10 ($levelDesc). '
+      'Respond with complexity appropriate to this level.\n\n';
+  final base = 'You are $aiName, a helpful AI assistant for daily life. '
+      'Be concise, friendly and supportive.';
+  final extraPart = extra != null ? '\n\n$extra' : '';
+  return '$kSafetyRules$nameLine$levelLine$base$extraPart';
+}
+
+String _skillLevelDescription(int level) {
+  if (level <= 2) return 'Beginner — use simple, clear language';
+  if (level <= 4) return 'Elementary — explain concepts step by step';
+  if (level <= 6) return 'Intermediate — balanced depth and clarity';
+  if (level <= 8) return 'Advanced — provide technical detail when helpful';
+  return 'Expert — full technical depth, proactive insights';
+}
+
 /// Abstract interface that all AI provider adapters must implement.
 abstract class AIService {
   /// Send a text-only chat message and return the assistant reply.
