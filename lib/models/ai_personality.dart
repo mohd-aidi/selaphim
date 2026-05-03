@@ -68,7 +68,9 @@ class AIPersonality {
   /// Progress (0.0–1.0) toward the next level.
   double get levelProgress {
     if (skillLevel >= 10) return 1.0;
-    return (experiencePoints % xpForNextLevel) / xpForNextLevel;
+    final xpIntoCurrentLevel = experiencePoints - _totalXpForLevel(skillLevel);
+    final progress = xpIntoCurrentLevel / xpForNextLevel;
+    return progress.clamp(0.0, 1.0).toDouble();
   }
 
   /// Return a new personality after adding [xp] points (may level up).
